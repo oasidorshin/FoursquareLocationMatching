@@ -6,6 +6,7 @@ import math
 
 from unidecode import unidecode
 from strsimpy.shingle_based import ShingleBased
+from haversine import haversine
 
 
 def apply_notnull(df, column, target_column, function):
@@ -13,6 +14,17 @@ def apply_notnull(df, column, target_column, function):
         df.loc[df[column].notnull(), column].apply(function)
 
     return df
+
+
+def pair_func(func, x1, x2):
+    if type(x1) == float and type(x2) == float:
+        return -1
+    elif type(x1) == float or type(x2) == float:
+        return -0.5
+    try:
+        return func(x1, x2)
+    except:
+        return -1
 
 
 def clean_string(df, column, target_column):
@@ -90,3 +102,22 @@ def cosine(profile0, profile1):
     profile1_norm = math.sqrt(agg)
 
     return dot_product / (profile0_norm * profile1_norm)
+
+
+def get_shingle_similarity(name):
+    if name == "cosine":
+        func = cosine
+    elif name == "jaccard":
+        func = jaccard
+    elif name == "overlap":
+        func = overlap
+
+    func_ = np.vectorize(
+        lambda x1, x2: pair_func(func, x1, x2))
+    return func_
+
+
+def haversine_vec(lat1, lon1, lat2, lon2):
+    def h(la1, lo1, la2, lo2):
+        return haversine((la1, lo1), (la2, lo2), unit='m')
+    return np.vectorize(h)(lat1, lon1, lat2, lon2)

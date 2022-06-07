@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from sklearn.model_selection import GroupKFold
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OrdinalEncoder
 
 
 from utils import *
@@ -17,7 +17,7 @@ def group_split(df):
     return df.iloc[splits[0][1]], df.iloc[splits[1][1]]
 
 
-def preprocessing(df, encoders=None):
+def preprocessing(df, encoder=None):
     df = df.set_index("id", drop=False)
 
     # Name cleaning
@@ -31,23 +31,24 @@ def preprocessing(df, encoders=None):
     df["categories"] = df["categories"].apply(lambda x: x.split(", "))
     df["categories"] = df["categories"].apply(frozenset)
 
+    # Fill missing country
+    df["country"] = df["country"].fillna("None")
+
     # Encode categorical columns
-    if encoders is None:
+    if encoder is None:
         # No encoders provided, create and save
-        encoders = {}
+        encoder_params = {"dtype": np.int32,
+                          "handle_unknown": "use_encoded_value",
+                          "unknown_value": -1}
 
-        category_encoder = LabelEncoder()
-        category_encoder = category_encoder.fit(df["categories"])
-        pickle_save(category_encoder, "saved/category_encoder.pkl")
-        encoders["categories"] = category_encoder
+        ordinal_encoder = OrdinalEncoder(**encoder_params)
 
-        country_encoder = LabelEncoder()
-        country_encoder = country_encoder.fit(df["country"])
-        pickle_save(country_encoder, "saved/country_encoder.pkl")
-        encoders["country"] = country_encoder
+        ordinal_encoder = ordinal_encoder.fit(df[["country", "categories"]])
+        pickle_save(ordinal_encoder, "saved/ordinal_encoder.pkl")
+        encoder = ordinal_encoder
 
-    df["categories"] = encoders["categories"].transform(df["categories"])
-    df["country"] = encoders["country"].transform(df["country"])
+    df[["country", "categories"]] = encoder.transform(
+        df[["country", "categories"]])
 
     return df
 

@@ -6,7 +6,7 @@ from sklearn.preprocessing import OrdinalEncoder
 
 
 from utils import *
-from feature_utils import clean_string, get_shingles
+from feature_utils import clean_string, get_shingles, apply_notnull, get_numbers_from_name
 
 
 def group_split(df):
@@ -26,13 +26,35 @@ def preprocessing(df, encoder=None):
     # Name shingles
     df = get_shingles(df, "name_cleaned", (2, 3))
 
+    # Full address
+    df["full_address"] = df["address"].fillna("") +\
+        " " + df["city"].fillna("") +\
+        " " + df["state"].fillna("")
+
+    df.loc[df["full_address"] == "  ", "full_address"] = np.NaN
+    df = clean_string(df, "full_address", "full_address_cleaned")
+    df = get_shingles(df, "full_address_cleaned", (3,))
+
+    # Numbers in name/address
+    df = apply_notnull(
+        df, "name_cleaned", "numbers_in_name", get_numbers_from_name)
+    df.loc[df["numbers_in_name"] == "", "numbers_in_name"] = np.NaN
+
+    df = apply_notnull(
+        df, "full_address_cleaned", "numbers_in_full_address", get_numbers_from_name)
+    df.loc[df["numbers_in_full_address"]
+           == "", "numbers_in_full_address"] = np.NaN
+
+    df = get_shingles(df, "numbers_in_name", (1, 2))
+    df = get_shingles(df, "numbers_in_full_address", (1, 2))
+
     # Categories to frozenset
     df["categories"] = df["categories"].fillna("None")
     df["categories"] = df["categories"].apply(lambda x: x.split(", "))
     df["categories"] = df["categories"].apply(frozenset)
 
     # Fill missing country
-    df["country"] = df["country"].fillna("None")
+    df["country"] = df["country"].astype(str)
 
     # Encode categorical columns
     if encoder is None:
@@ -47,7 +69,7 @@ def preprocessing(df, encoder=None):
         pickle_save(ordinal_encoder, "saved/ordinal_encoder.pkl")
         encoder = ordinal_encoder
 
-    df[["country", "categories"]] = encoder.transform(
+    df[["country_enc", "categories_enc"]] = encoder.transform(
         df[["country", "categories"]])
 
     return df

@@ -130,3 +130,6 @@ dmypy.json
 
 # Saved data
 saved/
+
+# Notebooks
+notebooks/

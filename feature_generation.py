@@ -27,7 +27,7 @@ def feature_engineering(train_df, pairs, add_target=True):
             train_df.loc[pairs["p1"], "longitude"],
             train_df.loc[pairs["p2"], "latitude"],
             train_df.loc[pairs["p2"], "longitude"])
-        pairs["haversine"] = pairs["haversine"].astype(np.float16)
+        pairs["haversine"] = pairs["haversine"].astype(np.float32)
 
     # Name similarity
     for name in ["jaccard", "overlap", "cosine"]:
@@ -39,21 +39,89 @@ def feature_engineering(train_df, pairs, add_target=True):
                                                  train_df.loc[pairs["p2"], f"name_cleaned_shingles_{k}"])
                 pairs[feature_name] = pairs[feature_name].astype(np.float16)
 
+    # Full address similarity
+    for name in ["jaccard", "overlap"]:
+        for k in tqdm([3]):
+            feature_name = f"full_address_{name}_{k}"
+            if feature_name not in pairs.columns:
+                similarity = get_shingle_similarity(name)
+                pairs[feature_name] = similarity(train_df.loc[pairs["p1"], f"full_address_cleaned_shingles_{k}"],
+                                                 train_df.loc[pairs["p2"], f"full_address_cleaned_shingles_{k}"])
+                pairs[feature_name] = pairs[feature_name].astype(np.float16)
+
+    # Name-address similarity
+    for name in ["overlap"]:
+        for k in tqdm([3]):
+            feature_name = f"name_address_{name}_{k}"
+            if feature_name not in pairs.columns:
+                similarity = get_shingle_similarity(name)
+                pairs[feature_name] = similarity(train_df.loc[pairs["p1"], f"name_cleaned_shingles_{k}"],
+                                                 train_df.loc[pairs["p2"], f"full_address_cleaned_shingles_{k}"])
+
+                pairs[feature_name] += similarity(train_df.loc[pairs["p1"], f"full_address_cleaned_shingles_{k}"],
+                                                  train_df.loc[pairs["p2"], f"name_cleaned_shingles_{k}"])
+                pairs[feature_name] = pairs[feature_name] / 2
+
+                pairs[feature_name] = pairs[feature_name].astype(np.float16)
+
+    # Numbers in name similarity
+    for name in ["overlap"]:
+        feature_name = f"numbers_in_name_{name}"
+        if feature_name not in pairs.columns:
+            similarity = get_shingle_similarity(name)
+            pairs[feature_name] = similarity(train_df.loc[pairs["p1"], f"numbers_in_name_shingles_1"],
+                                             train_df.loc[pairs["p2"], f"numbers_in_name_shingles_1"])
+            pairs[feature_name] += similarity(train_df.loc[pairs["p1"], f"numbers_in_name_shingles_2"],
+                                              train_df.loc[pairs["p2"], f"numbers_in_name_shingles_2"])
+            pairs[feature_name] = pairs[feature_name] / 2
+
+            pairs[feature_name] = pairs[feature_name].astype(np.float16)
+
+    # Numbers in address similarity
+    for name in ["overlap"]:
+        feature_name = f"numbers_in_address_{name}"
+        if feature_name not in pairs.columns:
+            similarity = get_shingle_similarity(name)
+            pairs[feature_name] = similarity(train_df.loc[pairs["p1"], f"numbers_in_full_address_shingles_1"],
+                                             train_df.loc[pairs["p2"], f"numbers_in_full_address_shingles_1"])
+            pairs[feature_name] += similarity(train_df.loc[pairs["p1"], f"numbers_in_full_address_shingles_2"],
+                                              train_df.loc[pairs["p2"], f"numbers_in_full_address_shingles_2"])
+            pairs[feature_name] = pairs[feature_name] / 2
+
+            pairs[feature_name] = pairs[feature_name].astype(np.float16)
+
+    # Numbers in name-address similarity
+    for name in ["overlap"]:
+        feature_name = f"numbers_in_name_address_{name}"
+        if feature_name not in pairs.columns:
+            similarity = get_shingle_similarity(name)
+            pairs[feature_name] = similarity(train_df.loc[pairs["p1"], f"numbers_in_name_shingles_1"],
+                                             train_df.loc[pairs["p2"], f"numbers_in_full_address_shingles_1"])
+            pairs[feature_name] += similarity(train_df.loc[pairs["p1"], f"numbers_in_full_address_shingles_1"],
+                                              train_df.loc[pairs["p2"], f"numbers_in_name_shingles_1"])
+            pairs[feature_name] += similarity(train_df.loc[pairs["p1"], f"numbers_in_name_shingles_2"],
+                                              train_df.loc[pairs["p2"], f"numbers_in_full_address_shingles_2"])
+            pairs[feature_name] += similarity(train_df.loc[pairs["p1"], f"numbers_in_full_address_shingles_2"],
+                                              train_df.loc[pairs["p2"], f"numbers_in_name_shingles_2"])
+            pairs[feature_name] = pairs[feature_name] / 4
+
+            pairs[feature_name] = pairs[feature_name].astype(np.float16)
+
     # Category
     if "categories1" not in pairs.columns:
         pairs["categories1"] = train_df.loc[pairs["p1"],
-                                            "categories"].reset_index(drop=True)
+                                            "categories_enc"].reset_index(drop=True)
         pairs["categories1"] = pairs["categories1"].astype(np.int32)
 
     if "categories2" not in pairs.columns:
         pairs["categories2"] = train_df.loc[pairs["p2"],
-                                            "categories"].reset_index(drop=True)
+                                            "categories_enc"].reset_index(drop=True)
         pairs["categories2"] = pairs["categories2"].astype(np.int32)
 
     # Country (same for every pair)
     if "country" not in pairs.columns:
         pairs["country"] = train_df.loc[pairs["p1"],
-                                        "country"].reset_index(drop=True)
+                                        "country_enc"].reset_index(drop=True)
         pairs["country"] = pairs["country"].astype(np.int32)
 
     # Target

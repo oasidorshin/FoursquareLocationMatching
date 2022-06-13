@@ -3,6 +3,7 @@ import pandas as pd
 
 import string
 import math
+import re
 
 from unidecode import unidecode
 from strsimpy.shingle_based import ShingleBased
@@ -121,3 +122,7 @@ def haversine_vec(lat1, lon1, lat2, lon2):
     def h(la1, lo1, la2, lo2):
         return haversine((la1, lo1), (la2, lo2), unit='m')
     return np.vectorize(h)(lat1, lon1, lat2, lon2)
+
+
+def get_numbers_from_name(name):
+    return "".join(re.findall("[-+]?[.]?[\d]+(?:,\d\d\d)*[\.]?\d*(?:[eE][-+]?\d+)?", name))

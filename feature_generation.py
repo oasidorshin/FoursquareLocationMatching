@@ -6,6 +6,8 @@ import sys
 from utils import *
 from feature_utils import haversine_vec, get_shingle_similarity
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 from tqdm import tqdm
 
 
@@ -123,6 +125,46 @@ def feature_engineering(train_df, pairs, add_target=True):
         pairs["country"] = train_df.loc[pairs["p1"],
                                         "country_enc"].reset_index(drop=True)
         pairs["country"] = pairs["country"].astype(np.int32)
+
+    # Country-based TF-IDF features
+    for country in tqdm(train_df["country_enc"].unique()):
+        country_df = train_df[train_df["country_enc"] == country]
+        country_df["country_index"] = np.arange(len(country_df)).astype(int)
+
+        country_pairs = pairs[pairs["country"] == country]
+        country_pairs["country_index1"] = country_df.loc[country_pairs["p1"],
+                                                         "country_index"].to_numpy()
+        country_pairs["country_index2"] = country_df.loc[country_pairs["p2"],
+                                                         "country_index"].to_numpy()
+
+        index1 = country_pairs["country_index1"].to_numpy()
+        index2 = country_pairs["country_index2"].to_numpy()
+
+        for column in ["name_cleaned", "full_address_cleaned"]:
+            try:
+                vectorizer_words = TfidfVectorizer()
+                vectorizer_trigrams = TfidfVectorizer(
+                    analyzer="char_wb", ngram_range=(3, 3))
+                words_matrix = vectorizer_words.fit_transform(
+                    country_df[column].fillna(""))
+                trigrams_matrix = vectorizer_trigrams.fit_transform(
+                    country_df[column].fillna(""))
+            except:
+                continue
+
+            pairs.loc[pairs["country"] == country, f"tfidf_trigram_{column}"] = \
+                np.sum(trigrams_matrix[index1].multiply(
+                    trigrams_matrix[index2]), axis=1)
+
+            pairs.loc[pairs["country"] == country, f"tfidf_words_{column}"] = \
+                np.sum(words_matrix[index1].multiply(
+                    words_matrix[index2]), axis=1)
+
+            pairs[f"tfidf_trigram_{column}"] = \
+                pairs[f"tfidf_trigram_{column}"].astype(np.float16)
+
+            pairs[f"tfidf_words_{column}"] = \
+                pairs[f"tfidf_words_{column}"].astype(np.float16)
 
     # Target
     if add_target:

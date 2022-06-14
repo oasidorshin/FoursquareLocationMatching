@@ -19,16 +19,16 @@ if __name__ == "__main__":
         target = "match"
 
         main_params = {'reg_alpha': 0,
-                       'reg_lambda': 0,
+                       'reg_lambda': 5,
                        'max_depth': 64,
                        'num_leaves': 256,
                        'learning_rate': 0.05,
-                       'n_estimators': 400,
+                       'n_estimators': 1000,
                        'min_child_samples': 20,
                        'subsample': 0.5,
                        'colsample_bytree': 0.5,
                        'colsample_bynode': 1,
-                       'early_stopping_round': 20
+                       'early_stopping_round': 50
                        }
 
         aux_params = {'importance_type': 'gain',

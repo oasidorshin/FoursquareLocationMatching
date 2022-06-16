@@ -166,6 +166,55 @@ def feature_engineering(train_df, pairs, add_target=True):
             pairs[f"tfidf_words_{column}"] = \
                 pairs[f"tfidf_words_{column}"].astype(np.float16)
 
+    # Group-by features
+    # Haversine features
+    groupby_p1 = pairs.groupby('p1')["haversine"]
+    groupby_p2 = pairs.groupby('p2')["haversine"]
+    pairs[f"p1_haversine_mean"] = groupby_p1.transform(
+        np.mean).astype(np.float32)
+    pairs[f"p2_haversine_mean"] = groupby_p2.transform(
+        np.mean).astype(np.float32)
+    pairs[f"p1_haversine_min"] = groupby_p1.transform(
+        np.min).astype(np.float32)
+    pairs[f"p2_haversine_min"] = groupby_p2.transform(
+        np.min).astype(np.float32)
+    pairs[f"p1_haversine_max"] = groupby_p1.transform(
+        np.max).astype(np.float32)
+    pairs[f"p2_haversine_max"] = groupby_p2.transform(
+        np.max).astype(np.float32)
+
+    pairs[f"p1_haversine_rank"] = ((groupby_p1.transform(
+        "rank", method="min") - 1) / pairs["count1"]).astype(np.float16)
+    pairs[f"p2_haversine_rank"] = ((groupby_p2.transform(
+        "rank", method="min") - 1) / pairs["count2"]).astype(np.float16)
+
+    # Name features
+    for feature in ["name_cleaned_overlap_3", "tfidf_trigram_name_cleaned"]:
+        groupby_p1 = pairs.groupby('p1')[feature]
+        groupby_p2 = pairs.groupby('p2')[feature]
+        pairs[f"p1_{feature}_mean"] = groupby_p1.transform(
+            np.mean).astype(np.float16)
+        pairs[f"p2_{feature}_mean"] = groupby_p2.transform(
+            np.mean).astype(np.float16)
+        pairs[f"p1_{feature}_max"] = groupby_p1.transform(
+            np.max).astype(np.float16)
+        pairs[f"p2_{feature}_max"] = groupby_p2.transform(
+            np.max).astype(np.float16)
+
+        pairs[f"p1_{feature}_rank"] = ((groupby_p1.transform(
+            "rank", method="min") - 1) / pairs["count1"]).astype(np.float16)
+        pairs[f"p2_{feature}_rank"] = ((groupby_p2.transform(
+            "rank", method="min") - 1) / pairs["count2"]).astype(np.float16)
+
+    # Address/numbers features: only mean
+    for feature in ["full_address_overlap_3", "numbers_in_name_overlap", "numbers_in_address_overlap", "numbers_in_name_address_overlap"]:
+        groupby_p1 = pairs.groupby('p1')[feature]
+        groupby_p2 = pairs.groupby('p2')[feature]
+        pairs[f"p1_{feature}_mean"] = groupby_p1.transform(
+            np.mean).astype(np.float16)
+        pairs[f"p2_{feature}_mean"] = groupby_p2.transform(
+            np.mean).astype(np.float16)
+
     # Target
     if add_target:
         if "match" not in pairs.columns:

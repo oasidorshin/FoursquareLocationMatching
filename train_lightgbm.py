@@ -51,6 +51,10 @@ if __name__ == "__main__":
         # Validate
         val_df["predict_proba"] = lgbmc.predict_proba(
             val_df[num_features + cat_features])[:, 1]
+
+        pickle_save(val_df["predict_proba"].to_numpy(),
+                    f"lgbm_pred_fold{fold_train}.pkl")
+
         print("MAP:",
               average_precision_score(val_df["match"], val_df["predict_proba"]))
 
@@ -66,8 +70,6 @@ if __name__ == "__main__":
 
         # Add itself
         full_val_df.apply(lambda x: x["prediction"].add(x["id"]), axis=1)
-
-        # TODO better inference
 
         print("Jaccard:", jaccard_score(
             full_val_df["id_target"], full_val_df["prediction"]))

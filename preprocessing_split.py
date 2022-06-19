@@ -48,6 +48,9 @@ def preprocessing(df, encoder=None):
     df = get_shingles(df, "numbers_in_name", (1, 2))
     df = get_shingles(df, "numbers_in_full_address", (1, 2))
 
+    # Catogories shingles
+    df = get_shingles(df, "categories", (3,))
+
     # Categories to frozenset
     df["categories"] = df["categories"].fillna("None")
     df["categories"] = df["categories"].apply(lambda x: x.split(", "))

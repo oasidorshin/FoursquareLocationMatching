@@ -120,6 +120,14 @@ def feature_engineering(train_df, pairs, add_target=True):
                                             "categories_enc"].reset_index(drop=True)
         pairs["categories2"] = pairs["categories2"].astype(np.int32)
 
+    # Categories text similarity
+    for name in ["overlap", "jaccard"]:
+        feature_name = f"categories_{name}"
+        if feature_name not in pairs.columns:
+            similarity = get_shingle_similarity(name)
+            pairs[feature_name] = similarity(train_df.loc[pairs["p1"], f"categories_shingles_3"],
+                                             train_df.loc[pairs["p2"], f"categories_shingles_3"])
+
     # Country (same for every pair)
     if "country" not in pairs.columns:
         pairs["country"] = train_df.loc[pairs["p1"],

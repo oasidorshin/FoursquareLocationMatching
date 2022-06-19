@@ -128,6 +128,8 @@ def feature_engineering(train_df, pairs, add_target=True):
             pairs[feature_name] = similarity(train_df.loc[pairs["p1"], f"categories_shingles_3"],
                                              train_df.loc[pairs["p2"], f"categories_shingles_3"])
 
+            pairs[feature_name] = pairs[feature_name].astype(np.float16)
+
     # Country (same for every pair)
     if "country" not in pairs.columns:
         pairs["country"] = train_df.loc[pairs["p1"],

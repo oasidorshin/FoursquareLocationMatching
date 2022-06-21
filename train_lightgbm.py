@@ -19,11 +19,11 @@ if __name__ == "__main__":
         target = "match"
 
         main_params = {'reg_alpha': 0,
-                       'reg_lambda': 5,
+                       'reg_lambda': 10,
                        'max_depth': 64,
                        'num_leaves': 256,
-                       'learning_rate': 0.05,
-                       'n_estimators': 1000,
+                       'learning_rate': 0.07,
+                       'n_estimators': 500,
                        'min_child_samples': 20,
                        'subsample': 0.5,
                        'colsample_bytree': 0.5,
@@ -53,7 +53,7 @@ if __name__ == "__main__":
             val_df[num_features + cat_features])[:, 1]
 
         pickle_save(val_df["predict_proba"].to_numpy(),
-                    f"lgbm_pred_fold{fold_train}.pkl")
+                    f"saved/lgbmc_outoffold{fold_val}.pkl")
 
         print("MAP:",
               average_precision_score(val_df["match"], val_df["predict_proba"]))

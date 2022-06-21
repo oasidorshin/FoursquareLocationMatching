@@ -77,8 +77,8 @@ if __name__ == "__main__":
 
     for fold in [0, 1]:
         fold_df = pickle_load(f"saved/fold{fold}_df.pkl")
-        fold_df = candidate_selection(fold_df, 160)
+        fold_df = candidate_selection(fold_df, 320)
 
-        pairs = forming_pairs_filtering(fold_df, 0.1)
+        pairs = forming_pairs_filtering(fold_df, 0.2)
 
         pickle_save(pairs, f"saved/pairs_fold{fold}.pkl")

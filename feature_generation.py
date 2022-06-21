@@ -217,7 +217,9 @@ def feature_engineering(train_df, pairs, add_target=True):
             "rank", method="min") - 1) / pairs["count2"]).astype(np.float16)
 
     # Address/numbers features: only mean
-    for feature in ["full_address_overlap_3", "numbers_in_name_overlap", "numbers_in_address_overlap", "numbers_in_name_address_overlap"]:
+    for feature in ["full_address_overlap_3", "numbers_in_name_overlap",
+                    "numbers_in_address_overlap", "numbers_in_name_address_overlap",
+                    "categories_overlap", "categories_jaccard"]:
         groupby_p1 = pairs.groupby('p1')[feature]
         groupby_p2 = pairs.groupby('p2')[feature]
         pairs[f"p1_{feature}_mean"] = groupby_p1.transform(

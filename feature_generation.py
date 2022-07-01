@@ -227,6 +227,43 @@ def feature_engineering(train_df, pairs, add_target=True):
         pairs[f"p2_{feature}_mean"] = groupby_p2.transform(
             np.mean).astype(np.float16)
 
+    # Count features
+    if "lon_lat_round1_perc1" not in pairs.columns:
+        pairs["lon_lat_round1_perc1"] = train_df.loc[pairs["p1"],
+                                                     "lon_lat_round1_perc"].to_numpy()
+        pairs["lon_lat_round1_perc1"] = pairs["lon_lat_round1_perc1"].astype(
+            np.float16)
+
+    if "lon_lat_round1_perc2" not in pairs.columns:
+        pairs["lon_lat_round1_perc2"] = train_df.loc[pairs["p2"],
+                                                     "lon_lat_round1_perc"].to_numpy()
+        pairs["lon_lat_round1_perc2"] = pairs["lon_lat_round1_perc2"].astype(
+            np.float16)
+
+    if "lon_lat_round0_perc1" not in pairs.columns:
+        pairs["lon_lat_round0_perc1"] = train_df.loc[pairs["p1"],
+                                                     "lon_lat_round0_perc"].to_numpy()
+        pairs["lon_lat_round0_perc1"] = pairs["lon_lat_round0_perc1"].astype(
+            np.float16)
+
+    if "lon_lat_round0_perc2" not in pairs.columns:
+        pairs["lon_lat_round0_perc2"] = train_df.loc[pairs["p2"],
+                                                     "lon_lat_round0_perc"].to_numpy()
+        pairs["lon_lat_round0_perc2"] = pairs["lon_lat_round0_perc2"].astype(
+            np.float16)
+
+    if "name_cleaned_perc1" not in pairs.columns:
+        pairs["name_cleaned_perc1"] = train_df.loc[pairs["p1"],
+                                                   "name_cleaned_perc"].to_numpy()
+        pairs["name_cleaned_perc1"] = pairs["name_cleaned_perc1"].astype(
+            np.float16)
+
+    if "name_cleaned_perc2" not in pairs.columns:
+        pairs["name_cleaned_perc2"] = train_df.loc[pairs["p2"],
+                                                   "name_cleaned_perc"].to_numpy()
+        pairs["name_cleaned_perc2"] = pairs["name_cleaned_perc2"].astype(
+            np.float16)
+
     # Target
     if add_target:
         if "match" not in pairs.columns:

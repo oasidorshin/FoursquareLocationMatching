@@ -75,6 +75,23 @@ def preprocessing(df, encoder=None):
     df[["country_enc", "categories_enc"]] = encoder.transform(
         df[["country", "categories"]])
 
+    # Count features
+    df["lat_round1"] = df["latitude"].round(1).astype(str)
+    df["lon_round1"] = df["longitude"].round(1).astype(str)
+    df["lon_lat_round1"] = df["lat_round1"] + " " + df["lon_round1"]
+
+    df["lat_round0"] = df["latitude"].round(0).astype(str)
+    df["lon_round0"] = df["longitude"].round(0).astype(str)
+    df["lon_lat_round0"] = df["lat_round0"] + " " + df["lon_round0"]
+
+    df["lon_lat_round1_perc"] = df.groupby("lon_lat_round1")[
+        "id"].transform("count") / len(df) * 100
+    df["lon_lat_round0_perc"] = df.groupby("lon_lat_round0")[
+        "id"].transform("count") / len(df) * 100
+
+    df["name_cleaned_perc"] = df.groupby(
+        "name_cleaned")["id"].transform("count") / len(df) * 100
+
     return df
 
 

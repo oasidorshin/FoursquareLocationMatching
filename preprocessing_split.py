@@ -36,14 +36,11 @@ def preprocessing(df, encoder=None):
     df = get_shingles(df, "full_address_cleaned", (3,))
 
     # Numbers in name/address
-    df = apply_notnull(
-        df, "name_cleaned", "numbers_in_name", get_numbers_from_name)
+    df = apply_notnull(df, "name_cleaned", "numbers_in_name", get_numbers_from_name)
     df.loc[df["numbers_in_name"] == "", "numbers_in_name"] = np.NaN
 
-    df = apply_notnull(
-        df, "full_address_cleaned", "numbers_in_full_address", get_numbers_from_name)
-    df.loc[df["numbers_in_full_address"]
-           == "", "numbers_in_full_address"] = np.NaN
+    df = apply_notnull(df, "full_address_cleaned", "numbers_in_full_address", get_numbers_from_name)
+    df.loc[df["numbers_in_full_address"] == "", "numbers_in_full_address"] = np.NaN
 
     df = get_shingles(df, "numbers_in_name", (1, 2))
     df = get_shingles(df, "numbers_in_full_address", (1, 2))
@@ -72,8 +69,7 @@ def preprocessing(df, encoder=None):
         pickle_save(ordinal_encoder, "saved/ordinal_encoder.pkl")
         encoder = ordinal_encoder
 
-    df[["country_enc", "categories_enc"]] = encoder.transform(
-        df[["country", "categories"]])
+    df[["country_enc", "categories_enc"]] = encoder.transform(df[["country", "categories"]])
 
     # Count features
     df["lat_round1"] = df["latitude"].round(1).astype(str)
@@ -84,13 +80,10 @@ def preprocessing(df, encoder=None):
     df["lon_round0"] = df["longitude"].round(0).astype(str)
     df["lon_lat_round0"] = df["lat_round0"] + " " + df["lon_round0"]
 
-    df["lon_lat_round1_perc"] = df.groupby("lon_lat_round1")[
-        "id"].transform("count") / len(df) * 100
-    df["lon_lat_round0_perc"] = df.groupby("lon_lat_round0")[
-        "id"].transform("count") / len(df) * 100
+    df["lon_lat_round1_perc"] = df.groupby("lon_lat_round1")["id"].transform("count") / len(df) * 100
+    df["lon_lat_round0_perc"] = df.groupby("lon_lat_round0")["id"].transform("count") / len(df) * 100
 
-    df["name_cleaned_perc"] = df.groupby(
-        "name_cleaned")["id"].transform("count") / len(df) * 100
+    df["name_cleaned_perc"] = df.groupby("name_cleaned")["id"].transform("count") / len(df) * 100
 
     return df
 

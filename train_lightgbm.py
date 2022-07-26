@@ -14,8 +14,7 @@ if __name__ == "__main__":
         val_df = pickle_load(f"saved/pairs_features_fold{fold_val}.pkl")
 
         cat_features = ["country", "categories1", "categories2"]
-        num_features = [x for x in train_df.columns
-                        if x not in ['p1', 'p2', 'match'] + cat_features]
+        num_features = [x for x in train_df.columns if x not in ['p1', 'p2', 'match'] + cat_features]
         target = "match"
 
         main_params = {'reg_alpha': 0,
@@ -44,24 +43,19 @@ if __name__ == "__main__":
         lgbmc.fit(train_df[num_features + cat_features],
                   train_df[target], verbose=10,
                   categorical_feature=cat_features,
-                  eval_set=(
-                      val_df[num_features + cat_features], val_df[target]),
+                  eval_set=(val_df[num_features + cat_features], val_df[target]),
                   eval_metric="average_precision")
 
         # Validate
-        val_df["predict_proba"] = lgbmc.predict_proba(
-            val_df[num_features + cat_features])[:, 1]
+        val_df["predict_proba"] = lgbmc.predict_proba(val_df[num_features + cat_features])[:, 1]
 
-        pickle_save(val_df["predict_proba"].to_numpy(),
-                    f"saved/lgbmc_outoffold{fold_val}.pkl")
+        pickle_save(val_df["predict_proba"].to_numpy(), f"saved/lgbmc_outoffold{fold_val}.pkl")
 
-        print("MAP:",
-              average_precision_score(val_df["match"], val_df["predict_proba"]))
+        print("MAP:", average_precision_score(val_df["match"], val_df["predict_proba"]))
 
         full_val_df = pickle_load(f"saved/fold{fold_val}_df.pkl")
         th = 0.5
-        prediction = val_df[
-            val_df["predict_proba"] > th][["p1", "p2"]].groupby("p1").agg(set)
+        prediction = val_df[val_df["predict_proba"] > th][["p1", "p2"]].groupby("p1").agg(set)
         full_val_df["prediction"] = prediction
 
         # Fill empty
@@ -71,8 +65,7 @@ if __name__ == "__main__":
         # Add itself
         full_val_df.apply(lambda x: x["prediction"].add(x["id"]), axis=1)
 
-        print("Jaccard:", jaccard_score(
-            full_val_df["id_target"], full_val_df["prediction"]))
+        print("Jaccard:", jaccard_score(full_val_df["id_target"], full_val_df["prediction"]))
 
         # Save model
         pickle_save(lgbmc, f"saved/lgbmc_fold{fold_train}.pkl")

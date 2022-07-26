@@ -111,13 +111,11 @@ def feature_engineering(train_df, pairs, add_target=True):
 
     # Category
     if "categories1" not in pairs.columns:
-        pairs["categories1"] = train_df.loc[pairs["p1"],
-                                            "categories_enc"].reset_index(drop=True)
+        pairs["categories1"] = train_df.loc[pairs["p1"], "categories_enc"].reset_index(drop=True)
         pairs["categories1"] = pairs["categories1"].astype(np.int32)
 
     if "categories2" not in pairs.columns:
-        pairs["categories2"] = train_df.loc[pairs["p2"],
-                                            "categories_enc"].reset_index(drop=True)
+        pairs["categories2"] = train_df.loc[pairs["p2"], "categories_enc"].reset_index(drop=True)
         pairs["categories2"] = pairs["categories2"].astype(np.int32)
 
     # Categories text similarity
@@ -132,8 +130,7 @@ def feature_engineering(train_df, pairs, add_target=True):
 
     # Country (same for every pair)
     if "country" not in pairs.columns:
-        pairs["country"] = train_df.loc[pairs["p1"],
-                                        "country_enc"].reset_index(drop=True)
+        pairs["country"] = train_df.loc[pairs["p1"], "country_enc"].reset_index(drop=True)
         pairs["country"] = pairs["country"].astype(np.int32)
 
     # Country-based TF-IDF features
@@ -142,10 +139,8 @@ def feature_engineering(train_df, pairs, add_target=True):
         country_df["country_index"] = np.arange(len(country_df)).astype(int)
 
         country_pairs = pairs[pairs["country"] == country]
-        country_pairs["country_index1"] = country_df.loc[country_pairs["p1"],
-                                                         "country_index"].to_numpy()
-        country_pairs["country_index2"] = country_df.loc[country_pairs["p2"],
-                                                         "country_index"].to_numpy()
+        country_pairs["country_index1"] = country_df.loc[country_pairs["p1"], "country_index"].to_numpy()
+        country_pairs["country_index2"] = country_df.loc[country_pairs["p2"], "country_index"].to_numpy()
 
         index1 = country_pairs["country_index1"].to_numpy()
         index2 = country_pairs["country_index2"].to_numpy()
@@ -153,45 +148,32 @@ def feature_engineering(train_df, pairs, add_target=True):
         for column in ["name_cleaned", "full_address_cleaned"]:
             try:
                 vectorizer_words = TfidfVectorizer()
-                vectorizer_trigrams = TfidfVectorizer(
-                    analyzer="char_wb", ngram_range=(3, 3))
-                words_matrix = vectorizer_words.fit_transform(
-                    country_df[column].fillna(""))
-                trigrams_matrix = vectorizer_trigrams.fit_transform(
-                    country_df[column].fillna(""))
+                vectorizer_trigrams = TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 3))
+                words_matrix = vectorizer_words.fit_transform(country_df[column].fillna(""))
+                trigrams_matrix = vectorizer_trigrams.fit_transform(country_df[column].fillna(""))
             except:
                 continue
 
             pairs.loc[pairs["country"] == country, f"tfidf_trigram_{column}"] = \
-                np.sum(trigrams_matrix[index1].multiply(
-                    trigrams_matrix[index2]), axis=1)
+                np.sum(trigrams_matrix[index1].multiply(trigrams_matrix[index2]), axis=1)
 
             pairs.loc[pairs["country"] == country, f"tfidf_words_{column}"] = \
-                np.sum(words_matrix[index1].multiply(
-                    words_matrix[index2]), axis=1)
+                np.sum(words_matrix[index1].multiply(words_matrix[index2]), axis=1)
 
-            pairs[f"tfidf_trigram_{column}"] = \
-                pairs[f"tfidf_trigram_{column}"].astype(np.float16)
+            pairs[f"tfidf_trigram_{column}"] = pairs[f"tfidf_trigram_{column}"].astype(np.float16)
 
-            pairs[f"tfidf_words_{column}"] = \
-                pairs[f"tfidf_words_{column}"].astype(np.float16)
+            pairs[f"tfidf_words_{column}"] = pairs[f"tfidf_words_{column}"].astype(np.float16)
 
     # Group-by features
     # Haversine features
     groupby_p1 = pairs.groupby('p1')["haversine"]
     groupby_p2 = pairs.groupby('p2')["haversine"]
-    pairs[f"p1_haversine_mean"] = groupby_p1.transform(
-        np.mean).astype(np.float32)
-    pairs[f"p2_haversine_mean"] = groupby_p2.transform(
-        np.mean).astype(np.float32)
-    pairs[f"p1_haversine_min"] = groupby_p1.transform(
-        np.min).astype(np.float32)
-    pairs[f"p2_haversine_min"] = groupby_p2.transform(
-        np.min).astype(np.float32)
-    pairs[f"p1_haversine_max"] = groupby_p1.transform(
-        np.max).astype(np.float32)
-    pairs[f"p2_haversine_max"] = groupby_p2.transform(
-        np.max).astype(np.float32)
+    pairs[f"p1_haversine_mean"] = groupby_p1.transform(np.mean).astype(np.float32)
+    pairs[f"p2_haversine_mean"] = groupby_p2.transform(np.mean).astype(np.float32)
+    pairs[f"p1_haversine_min"] = groupby_p1.transform(np.min).astype(np.float32)
+    pairs[f"p2_haversine_min"] = groupby_p2.transform(np.min).astype(np.float32)
+    pairs[f"p1_haversine_max"] = groupby_p1.transform(np.max).astype(np.float32)
+    pairs[f"p2_haversine_max"] = groupby_p2.transform(np.max).astype(np.float32)
 
     pairs[f"p1_haversine_rank"] = ((groupby_p1.transform(
         "rank", method="min") - 1) / pairs["count1"]).astype(np.float16)
@@ -202,14 +184,10 @@ def feature_engineering(train_df, pairs, add_target=True):
     for feature in ["name_cleaned_overlap_3", "tfidf_trigram_name_cleaned"]:
         groupby_p1 = pairs.groupby('p1')[feature]
         groupby_p2 = pairs.groupby('p2')[feature]
-        pairs[f"p1_{feature}_mean"] = groupby_p1.transform(
-            np.mean).astype(np.float16)
-        pairs[f"p2_{feature}_mean"] = groupby_p2.transform(
-            np.mean).astype(np.float16)
-        pairs[f"p1_{feature}_max"] = groupby_p1.transform(
-            np.max).astype(np.float16)
-        pairs[f"p2_{feature}_max"] = groupby_p2.transform(
-            np.max).astype(np.float16)
+        pairs[f"p1_{feature}_mean"] = groupby_p1.transform(np.mean).astype(np.float16)
+        pairs[f"p2_{feature}_mean"] = groupby_p2.transform(np.mean).astype(np.float16)
+        pairs[f"p1_{feature}_max"] = groupby_p1.transform(np.max).astype(np.float16)
+        pairs[f"p2_{feature}_max"] = groupby_p2.transform(np.max).astype(np.float16)
 
         pairs[f"p1_{feature}_rank"] = ((groupby_p1.transform(
             "rank", method="min") - 1) / pairs["count1"]).astype(np.float16)
@@ -217,52 +195,42 @@ def feature_engineering(train_df, pairs, add_target=True):
             "rank", method="min") - 1) / pairs["count2"]).astype(np.float16)
 
     # Address/numbers features: only mean
-    for feature in ["full_address_overlap_3", "numbers_in_name_overlap",
-                    "numbers_in_address_overlap", "numbers_in_name_address_overlap",
-                    "categories_overlap", "categories_jaccard"]:
+    for feature in ["full_address_overlap_3",
+                    "numbers_in_name_overlap",
+                    "numbers_in_address_overlap",
+                    "numbers_in_name_address_overlap",
+                    "categories_overlap",
+                    "categories_jaccard"]:
+
         groupby_p1 = pairs.groupby('p1')[feature]
         groupby_p2 = pairs.groupby('p2')[feature]
-        pairs[f"p1_{feature}_mean"] = groupby_p1.transform(
-            np.mean).astype(np.float16)
-        pairs[f"p2_{feature}_mean"] = groupby_p2.transform(
-            np.mean).astype(np.float16)
+        pairs[f"p1_{feature}_mean"] = groupby_p1.transform(np.mean).astype(np.float16)
+        pairs[f"p2_{feature}_mean"] = groupby_p2.transform(np.mean).astype(np.float16)
 
     # Count features
     if "lon_lat_round1_perc1" not in pairs.columns:
-        pairs["lon_lat_round1_perc1"] = train_df.loc[pairs["p1"],
-                                                     "lon_lat_round1_perc"].to_numpy()
-        pairs["lon_lat_round1_perc1"] = pairs["lon_lat_round1_perc1"].astype(
-            np.float16)
+        pairs["lon_lat_round1_perc1"] = train_df.loc[pairs["p1"], "lon_lat_round1_perc"].to_numpy()
+        pairs["lon_lat_round1_perc1"] = pairs["lon_lat_round1_perc1"].astype(np.float16)
 
     if "lon_lat_round1_perc2" not in pairs.columns:
-        pairs["lon_lat_round1_perc2"] = train_df.loc[pairs["p2"],
-                                                     "lon_lat_round1_perc"].to_numpy()
-        pairs["lon_lat_round1_perc2"] = pairs["lon_lat_round1_perc2"].astype(
-            np.float16)
+        pairs["lon_lat_round1_perc2"] = train_df.loc[pairs["p2"], "lon_lat_round1_perc"].to_numpy()
+        pairs["lon_lat_round1_perc2"] = pairs["lon_lat_round1_perc2"].astype(np.float16)
 
     if "lon_lat_round0_perc1" not in pairs.columns:
-        pairs["lon_lat_round0_perc1"] = train_df.loc[pairs["p1"],
-                                                     "lon_lat_round0_perc"].to_numpy()
-        pairs["lon_lat_round0_perc1"] = pairs["lon_lat_round0_perc1"].astype(
-            np.float16)
+        pairs["lon_lat_round0_perc1"] = train_df.loc[pairs["p1"], "lon_lat_round0_perc"].to_numpy()
+        pairs["lon_lat_round0_perc1"] = pairs["lon_lat_round0_perc1"].astype(np.float16)
 
     if "lon_lat_round0_perc2" not in pairs.columns:
-        pairs["lon_lat_round0_perc2"] = train_df.loc[pairs["p2"],
-                                                     "lon_lat_round0_perc"].to_numpy()
-        pairs["lon_lat_round0_perc2"] = pairs["lon_lat_round0_perc2"].astype(
-            np.float16)
+        pairs["lon_lat_round0_perc2"] = train_df.loc[pairs["p2"], "lon_lat_round0_perc"].to_numpy()
+        pairs["lon_lat_round0_perc2"] = pairs["lon_lat_round0_perc2"].astype(np.float16)
 
     if "name_cleaned_perc1" not in pairs.columns:
-        pairs["name_cleaned_perc1"] = train_df.loc[pairs["p1"],
-                                                   "name_cleaned_perc"].to_numpy()
-        pairs["name_cleaned_perc1"] = pairs["name_cleaned_perc1"].astype(
-            np.float16)
+        pairs["name_cleaned_perc1"] = train_df.loc[pairs["p1"], "name_cleaned_perc"].to_numpy()
+        pairs["name_cleaned_perc1"] = pairs["name_cleaned_perc1"].astype(np.float16)
 
     if "name_cleaned_perc2" not in pairs.columns:
-        pairs["name_cleaned_perc2"] = train_df.loc[pairs["p2"],
-                                                   "name_cleaned_perc"].to_numpy()
-        pairs["name_cleaned_perc2"] = pairs["name_cleaned_perc2"].astype(
-            np.float16)
+        pairs["name_cleaned_perc2"] = train_df.loc[pairs["p2"], "name_cleaned_perc"].to_numpy()
+        pairs["name_cleaned_perc2"] = pairs["name_cleaned_perc2"].astype(np.float16)
 
     # Target
     if add_target:
@@ -289,8 +257,6 @@ if __name__ == "__main__":
 
         print(fold_pairs_features)
 
-        print(
-            f"Total size of fold_pairs_features: {(sys.getsizeof(fold_pairs_features) / 1024**2):.2f} MB")
+        print(f"Total size of fold_pairs_features: {(sys.getsizeof(fold_pairs_features) / 1024**2):.2f} MB")
 
-        pickle_save(fold_pairs_features,
-                    f"saved/pairs_features_fold{fold}.pkl")
+        pickle_save(fold_pairs_features, f"saved/pairs_features_fold{fold}.pkl")

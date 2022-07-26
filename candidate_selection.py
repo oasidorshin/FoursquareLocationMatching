@@ -15,20 +15,19 @@ def country_closest_k(train_df, country, candidate_k):
     country_np = np.deg2rad(country_df[["latitude", "longitude"]].to_numpy())
 
     # To 3d
-    country_np = np.vstack([(np.cos(country_np[:, 0]) * np.cos(country_np[:, 1])),
-                            (np.cos(country_np[:, 0]) *
-                             np.sin(country_np[:, 1])),
-                            (np.sin(country_np[:, 0]))]).T
+    country_np = np.vstack([
+        (np.cos(country_np[:, 0]) * np.cos(country_np[:, 1])),
+        (np.cos(country_np[:, 0]) * np.sin(country_np[:, 1])),
+        (np.sin(country_np[:, 0]))
+    ]).T
 
     neigh = NearestNeighbors(n_jobs=-1).fit(country_np)
     try:
-        distances, neighbors_indices = neigh.kneighbors(
-            country_np, n_neighbors=candidate_k, return_distance=True)
+        distances, neighbors_indices = neigh.kneighbors(country_np, n_neighbors=candidate_k, return_distance=True)
     except:
         # Handle Expected n_neighbors <= n_samples error
         # Add all but exclude itself
-        neighbors_indices = [
-            [i for i in range(len(country_df)) if i != j] for j in range(len(country_df))]
+        neighbors_indices = [[i for i in range(len(country_df)) if i != j] for j in range(len(country_df))]
         neighbors_indices = np.array(neighbors_indices, dtype=int)
 
     # Convert indices to id

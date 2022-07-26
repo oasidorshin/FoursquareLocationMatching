@@ -12,6 +12,16 @@ from tqdm import tqdm
 
 
 def feature_engineering(train_df, pairs, add_target=True):
+    """Main feature engineering function.
+
+    Args:
+        train_df (pd.DataFrame): Original train_df.
+        pairs (pd.DataFrame): Filtered pairs DataFrame.
+        add_target (bool, optional): Whether to add binary match target column. Defaults to True.
+
+    Returns:
+        pd.DataFrame: Pairs DataFrame with generated features.
+    """
 
     # Candidates count
     if "count1" not in pairs.columns:

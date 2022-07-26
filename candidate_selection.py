@@ -9,6 +9,7 @@ from feature_utils import overlap
 
 
 def country_closest_k(train_df, country, candidate_k):
+    """Utility function for selecting k closest candidates from each country."""
     country_df = train_df[train_df["country"] == country]
 
     # Coordinates
@@ -39,6 +40,15 @@ def country_closest_k(train_df, country, candidate_k):
 
 
 def candidate_selection(train_df, candidate_k):
+    """Selecting candidate_k closest candidates from each country.
+
+    Args:
+        train_df (pd.DataFrame): Original train_df.
+        candidate_k (int): Number of candidates to select.
+
+    Returns:
+        pd.DataFrame: train_df with k_candidates column.
+    """
     train_df["k_candidates"] = pd.Series(dtype='object')
     uq_countries = train_df["country"].value_counts().index
 
@@ -54,6 +64,16 @@ def candidate_selection(train_df, candidate_k):
 
 
 def forming_pairs_filtering(train_df, th):
+    """Forming object pairs from selected closest candidates
+    and filtering them based on name overlap between them.
+
+    Args:
+        train_df (pd.DataFrame): train_df with k_candidates column.
+        th (float): Name overlap threshold.
+
+    Returns:
+        pd.DataFrame: Filtered pairs DataFrame.
+    """
     pairs = []
     dict_ = train_df["name_cleaned_shingles_3"].to_dict()
 

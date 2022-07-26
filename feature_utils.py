@@ -11,6 +11,17 @@ from haversine import haversine
 
 
 def apply_notnull(df, column, target_column, function):
+    """Utility to apply function only on not-null values of the particular column.
+
+    Args:
+        df (pd.DataFrame): DataFrame to apply function on.
+        column (str): Column to apply function on.
+        target_column (str): Column to assign function output.
+        function (func): Function to apply.
+
+    Returns:
+        pd.DataFrame: Resulting DataFrame.
+    """
     df.loc[df[column].notnull(), target_column] = \
         df.loc[df[column].notnull(), column].apply(function)
 
@@ -18,6 +29,8 @@ def apply_notnull(df, column, target_column, function):
 
 
 def pair_func(func, x1, x2):
+    """Wrapper for func; if both arguments are NaN, -1 is returned,
+    if only one then -0.5."""
     if type(x1) == float and type(x2) == float:
         return -1
     elif type(x1) == float or type(x2) == float:
